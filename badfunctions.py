@@ -7,7 +7,7 @@
 #########################################################################
 
 ## MODULES
-from urllib.request import urlopen
+from urllib.request import urlopen, Request
 
 from datetime import date, timedelta
 import datetime
@@ -42,7 +42,10 @@ def req_data(number_of_countries):
     general_data = []
     print("Starting data request...")
     countries = []
-    response = urlopen("https://www.worldometers.info/coronavirus/#countries")
+    url = "https://www.worldometers.info/coronavirus/#countries"
+    req = Request(url, headers = {"User-Agent": "Mozilla/5.0"})
+    #response = urlopen()
+    response = urlopen(req)
     page_source = str(response.read())
 
     ref_string_for_country = 'class="mt_a" href="country/'
@@ -67,7 +70,10 @@ def req_data(number_of_countries):
         elif countries[i] == 'S. Korea':
             countries[i] = 'south-korea'
 
-        response = urlopen("https://www.worldometers.info/coronavirus/country/"+str(countries[i]+"/"))
+        url = "https://www.worldometers.info/coronavirus/country/"+str(countries[i]+"/")
+        req = Request(url, headers = {"User-Agent": "Mozilla/5.0"})
+        #response = urlopen()
+        response = urlopen(req)
         page_source = str(response.read())
         str_ref = '<script type="text/javascript">'
         divided = page_source.split(str_ref)
@@ -140,7 +146,10 @@ def req_data(number_of_countries):
     print(" ")
     print('Starting realtime request...')
     #Asking for realtime data
-    response = urlopen("https://www.worldometers.info/coronavirus/#countries")
+    
+    url = "https://www.worldometers.info/coronavirus/#countries"
+    req = Request(url, headers = {"User-Agent": "Mozilla/5.0"})
+    response = urlopen(req)
     page_source = str(response.read())
 
     for i in range(0, number_of_countries-1):
@@ -223,7 +232,7 @@ def plot_death_last_x_days(data_dict, countries, days, death_threshold, path):
     for i in range(0, len(lis_total)):
         plt.plot(lis_total[i], label=countries[i])
 
-    plt.legend(loc='upper left')
+    plt.legend(loc='lower right')
 
     ax = fig.add_subplot(111)
     ax.tick_params(labeltop=False, labelright=True)
@@ -406,3 +415,54 @@ def plot_forecast(datos, future_days, path):
   
   # Breve explicacion de lo que hace 'curve_fit'
   # https://astrofrog.github.io/py4sci/_static/15.%20Fitting%20models%20to%20data.html
+  
+  
+  
+  
+  
+#########################################################################
+## obtain_message 
+##
+## TCreates the message is going to be sent to the channel
+##
+## input:    data_dict
+##           countries 
+##
+## output:   message
+##         
+#########################################################################  
+def obtain_message(data_dict, countries):  
+  # obtain last spanish values from .txt
+  with open('/home/pi/Documents/telegram/covid/log.txt', 'r') as f:
+  		lines = f.read().splitlines()
+  		last_line = lines[-1]
+  		data = last_line.split('.')[1]
+  		data = data.split(',')
+  		_infected = float(data[1])
+  		_deaths = float(data[2])
+  		_recovered = float(data[3])
+  
+  
+  message = ""
+  msg_header = "INFO COVID-19\n"
+  msg = ""
+  
+  for country in countries:
+    for key in data_dict[country]:
+      if key == "Cases":
+        if country == "Spain":
+          msg_spain = country + "\n"
+          msg_spain = msg_spain + key + ": " + str(data_dict[country][key][-1]) + " (+" +str(data_dict[country][key][-1]-int(_infected)) + ")\n"
+        else:
+          msg = msg + country + "\n"
+          msg = msg + key + ": " + str(data_dict[country][key][-1]) + "\n"
+      elif key == "Deaths":
+        if country == "Spain":
+          msg_spain = msg_spain + key + ": " + str(data_dict[country][key][-1]) + " (+" +str(data_dict[country][key][-1]-int(_deaths)) + ")\n\n"
+        else:
+          msg = msg + key + ": " + str(data_dict[country][key][-1]) + "\n\n"
+      
+  msg_footer = "\n"
+  
+  message = msg_header + msg_spain + msg + msg_footer
+  return message

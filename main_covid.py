@@ -32,8 +32,11 @@ import scipy.optimize as opt
 # No usar rutas relativas
 # -----------------------------------------------------------------------
 
+import telebot
+from datetime import datetime
+import time
 
-from badfunctions import req_data, plot_death_last_x_days, plot_heat_map, plot_forecast
+from badfunctions import req_data, plot_death_last_x_days, plot_heat_map, plot_forecast, obtain_message
 
 
 # Raspberry path
@@ -42,15 +45,36 @@ path = '/home/pi/Documents/telegram/covid/'
 # Telegram token
 with open('/home/pi/Documents/telegram/util/token.txt') as f:
     token = f.readline()
+    token = token.replace('\n','')
 
+# Channel and group IDs
+GROUP_ID = -1001199015924
+CHANNEL_ID = -1001470969008
 
 # Extract data
-num_countries = 6
+num_countries = 10
 [data_dict, countries] = req_data(num_countries)
 
 # Plots
 plot_death_last_x_days(data_dict, countries, 10, 30, path)
-
 plot_heat_map(data_dict, countries, path)
-
 plot_forecast(data_dict['Spain']['Deaths'], 5, path)
+
+# timestamp
+stamp = datetime.now()
+
+# bot token
+bot = telebot.TeleBot(str(token))
+
+# Create message
+message = obtain_message(data_dict, countries)
+
+#if(stamp.time().hour < 8):
+bot.send_message(GROUP_ID, message)
+	#bot.send_message(CHANNEL_ID, msg)
+
+#if(stamp.time().hour == 10):
+figure_comparison = open(path+'figures/death_last_10_threshold_30.png', 'rb')
+figure_square = open(path+'figures/deaths_daily_square.png', 'rb')
+bot.send_photo(GROUP_ID, figure_comparison)
+bot.send_photo(GROUP_ID, figure_square)
