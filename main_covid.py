@@ -70,11 +70,11 @@ bot = telebot.TeleBot(str(token))
 message = obtain_message(data_dict, countries)
 
 #if(stamp.time().hour < 8):
-bot.send_message(GROUP_ID, message)
+bot.send_message(CHANNEL_ID, message)
 	#bot.send_message(CHANNEL_ID, msg)
 
 #if(stamp.time().hour == 10):
 figure_comparison = open(path+'figures/death_last_10_threshold_30.png', 'rb')
 figure_square = open(path+'figures/deaths_daily_square.png', 'rb')
-bot.send_photo(GROUP_ID, figure_comparison)
-bot.send_photo(GROUP_ID, figure_square)
+bot.send_photo(CHANNEL_ID, figure_comparison)
+bot.send_photo(CHANNEL_ID, figure_square)
