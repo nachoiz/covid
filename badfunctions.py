@@ -28,7 +28,7 @@ import scipy.optimize as opt
 
 
 #########################################################################
-## req_data 
+## req_data
 ##
 ## Data extraction function is divided in 3 parts:
 ## data extraction -> dict transformation -> update data appendix
@@ -146,7 +146,7 @@ def req_data(number_of_countries):
     print(" ")
     print('Starting realtime request...')
     #Asking for realtime data
-    
+
     url = "https://www.worldometers.info/coronavirus/#countries"
     req = Request(url, headers = {"User-Agent": "Mozilla/5.0"})
     response = urlopen(req)
@@ -175,12 +175,12 @@ def req_data(number_of_countries):
 
     print("End of data gathering!")
     return [data_dict, countries]
-    
-    
+
+
 
 
 #########################################################################
-## plot_death_last_x_days 
+## plot_death_last_x_days
 ##
 ## This plot represents deaths w.r.t. days for a group of countries.
 ##
@@ -191,7 +191,7 @@ def req_data(number_of_countries):
 ##           path              -> where to save the figure
 ##
 ## output:   death_last_X_threshold_X.png'
-##         
+##
 #########################################################################
 def plot_death_last_x_days(data_dict, countries, days, death_threshold, path):
     country_list = []
@@ -242,17 +242,17 @@ def plot_death_last_x_days(data_dict, countries, days, death_threshold, path):
     locs, labels = plt.yticks()                     # Get locations and labels
     print(locs)
     plt.yticks([locs[2], locs[3], locs[4]], [100, 1000, 10000])    # Set locations and labels
-    
+
     plt.xlabel('Dias', fontsize=14)
     plt.ylabel('Muertes', fontsize=14)
     plt.title('Dias desde la muerte '+str(death_threshold))
     #plt.show()
     fig.savefig(path+'figures/death_last_'+str(days)+'_threshold_'+str(death_threshold)+'.png')
     print("*************************** plot_death_last_x_days FINISHED")
-    
-    
+
+
 #########################################################################
-## plot_heat_map 
+## plot_heat_map
 ##
 ## This plot represents daily deaths w.r.t. days for a group of countries.
 ##
@@ -261,9 +261,9 @@ def plot_death_last_x_days(data_dict, countries, days, death_threshold, path):
 ##           path              -> where to save the figure
 ##
 ## output:   deaths_daily_square.png'
-##         
+##
 #########################################################################
-def plot_heat_map(data_dict, countries, path):    
+def plot_heat_map(data_dict, countries, path):
   # Nice to have 9 elements and 9 countries to build up a square matrix
   mat = np.zeros(shape=(len(countries),9))
   i = 0
@@ -272,149 +272,42 @@ def plot_heat_map(data_dict, countries, path):
       vector.append(data_dict[country]['Daily Deaths'][-9:])
       mat[i,:] = vector[i]
       i = i+1
-  
+
   # Create figure
   fig, ax = plt.subplots()
   im = ax.imshow(mat)
-  
+
   # We want to show all ticks...
   ax.set_xticks(np.arange(9))
   ax.set_yticks(np.arange(len(countries)))
   # ... and label them with the respective list entries
-  
+
   dias = ["dia "+str(i) for i in range(10)]
-  
+
   semana = []
   for i in range(0,9):
       dia = datetime.datetime.strftime(datetime.datetime.now() - timedelta(i), '%d-%m')
       semana.append(dia)
-  
+
   semana = semana[::-1]
-  
+
   ax.set_xticklabels(semana)
   ax.set_yticklabels(countries)
-  
+
   # Rotate the tick labels and set their alignment.
   plt.setp(ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
-  
+
   # Loop over data dimensions and create text annotations.
   for i in range(len(countries)):
       for j in range(9):
           text = ax.text(j, i, int(mat[i, j]),ha="center", va="center", color="w")
-  
+
   ax.set_title("Muertos diarios")
   fig.tight_layout()
   #plt.show()
   fig.savefig(path+'figures/deaths_daily_square.png')
   print("*************************** plot_heat_map FINISHED")
-  
 
-
-
-#########################################################################
-## plot_forecast 
-##
-## This plot represents daily deaths w.r.t. days for a group of countries.
-##
-## input:    data_dict         -> countries data
-##           future_days       -> forecast days 
-##           path              -> where to save the figure
-##
-## output:   plot_prediction.png'
-##         
-#########################################################################
-def plot_forecast(datos, future_days, path):  
-  ### Function ##########################################################
-  # in-line function -> lambda t,a,b: a*numpy.exp(b*t)
-  def func(t, a, b):
-  	return a*np.exp(b*t)
-      
-  
-  ### Current data ######################################################  
-  country = datos
-  for elem in country:
-      if elem >= 10:
-          ind = country.index(elem)
-          break
-  
-  # Current day since record
-  current_day_num = len(country)
-  
-  # Subscripts
-  # 0 -> current variable
-  # 1 -> 'future' variable
-  
-  days_ago = len(country)-ind    
-  country_deaths = country[ind:]
-  y0 = np.asarray(country_deaths)
-  x0 = np.arange(y0.size)
-  
-  # Generate an x vector with the days
-  dias0 = []
-  for i in range(0,len(x0)):
-      dia = datetime.datetime.strftime(datetime.datetime.now() - timedelta(i), '%d-%m')
-      dias0.append(dia)
-  dias0 = dias0[::-1]
-  
-  # Create plot figure
-  fig = plt.figure()
-  
-  plt.legend(loc='upper left')
-  ax = fig.add_subplot(111)
-  
-  # Yticks in both sides
-  ax.tick_params(labeltop=False, labelright=True)
-  
-  # Grid on
-  ax.grid(True, linestyle='-.')
-  
-  # Plot
-  plt.plot(dias0,y0, 'bx')
-  
-  
-  ### Future prevision ######################################################
-  #future_days = 5
-  
-  # Generate an x vector with the future days
-  dias1 = []
-  for i in range(1,future_days+1):
-      dia = datetime.datetime.strftime(datetime.datetime.now() + timedelta(i), '%d-%m')
-      dias1.append(dia)
-  
-  # Standard deviation +/-
-  std = 50. # muertos
-  e = np.repeat(std, len(dias1))
-  #plt.errorbar(x, y, yerr=e, fmt="none")
-  
-  # Extract the coefficients taking into account the historical data
-  # popt -> best-fit parameters for 'a' and 'b'
-  # pcov -> true variance and covariance of the parameters
-  popt, pcov = opt.curve_fit(func,x0, y0)
-  print("The fist parameters are:")
-  print("a =", popt[0], "+/-", pcov[0,0]**0.5)
-  print("b =", popt[1], "+/-", pcov[1,1]**0.5)
-  
-  #x = np.linspace(20,40)
-  
-  xfine = np.linspace(ind, ind+future_days, future_days)  # define values to plot the function for
-  plt.plot(dias1, func(xfine, popt[0], popt[1]), 'r-')
-  plt.errorbar(dias1, func(xfine, popt[0], popt[1]), yerr=e, uplims=True, lolims=True, fmt="none")
-  
-  # Turn of some xtick labels
-  every_nth = 4
-  for n, label in enumerate(ax.xaxis.get_ticklabels()):
-      if n % every_nth != 0:
-          label.set_visible(False)
-  
-  #plt.show()
-  fig.savefig(path+'figures/forecast_'+str(future_days)+'.png')
-  print("*************************** plot_forecast FINISHED")
-  
-  # Aproximar mejor la exponencial incluyendo weighted coeffs
-  # https://stackoverflow.com/questions/3433486/how-to-do-exponential-and-logarithmic-curve-fitting-in-python-i-found-only-poly
-  
-  # Breve explicacion de lo que hace 'curve_fit'
-  # https://astrofrog.github.io/py4sci/_static/15.%20Fitting%20models%20to%20data.html
 
 
 
@@ -430,14 +323,122 @@ def plot_forecast(datos, future_days, path):
 ## output:   plot_prediction.png'
 ##
 #########################################################################
-def horizontal_distribution(data_dict, countries):
+def plot_forecast(datos, future_days, path):
+  ### Function ##########################################################
+  # in-line function -> lambda t,a,b: a*numpy.exp(b*t)
+  def func(t, a, b):
+  	return a*np.exp(b*t)
+
+
+  ### Current data ######################################################
+  country = datos
+  for elem in country:
+      if elem >= 10:
+          ind = country.index(elem)
+          break
+
+  # Current day since record
+  current_day_num = len(country)
+
+  # Subscripts
+  # 0 -> current variable
+  # 1 -> 'future' variable
+
+  days_ago = len(country)-ind
+  country_deaths = country[ind:]
+  y0 = np.asarray(country_deaths)
+  x0 = np.arange(y0.size)
+
+  # Generate an x vector with the days
+  dias0 = []
+  for i in range(0,len(x0)):
+      dia = datetime.datetime.strftime(datetime.datetime.now() - timedelta(i), '%d-%m')
+      dias0.append(dia)
+  dias0 = dias0[::-1]
+
+  # Create plot figure
+  fig = plt.figure()
+
+  plt.legend(loc='upper left')
+  ax = fig.add_subplot(111)
+
+  # Yticks in both sides
+  ax.tick_params(labeltop=False, labelright=True)
+
+  # Grid on
+  ax.grid(True, linestyle='-.')
+
+  # Plot
+  plt.plot(dias0,y0, 'bx')
+
+
+  ### Future prevision ######################################################
+  #future_days = 5
+
+  # Generate an x vector with the future days
+  dias1 = []
+  for i in range(1,future_days+1):
+      dia = datetime.datetime.strftime(datetime.datetime.now() + timedelta(i), '%d-%m')
+      dias1.append(dia)
+
+  # Standard deviation +/-
+  std = 50. # muertos
+  e = np.repeat(std, len(dias1))
+  #plt.errorbar(x, y, yerr=e, fmt="none")
+
+  # Extract the coefficients taking into account the historical data
+  # popt -> best-fit parameters for 'a' and 'b'
+  # pcov -> true variance and covariance of the parameters
+  popt, pcov = opt.curve_fit(func,x0, y0)
+  print("The fist parameters are:")
+  print("a =", popt[0], "+/-", pcov[0,0]**0.5)
+  print("b =", popt[1], "+/-", pcov[1,1]**0.5)
+
+  #x = np.linspace(20,40)
+
+  xfine = np.linspace(ind, ind+future_days, future_days)  # define values to plot the function for
+  plt.plot(dias1, func(xfine, popt[0], popt[1]), 'r-')
+  plt.errorbar(dias1, func(xfine, popt[0], popt[1]), yerr=e, uplims=True, lolims=True, fmt="none")
+
+  # Turn of some xtick labels
+  every_nth = 4
+  for n, label in enumerate(ax.xaxis.get_ticklabels()):
+      if n % every_nth != 0:
+          label.set_visible(False)
+
+  #plt.show()
+  fig.savefig(path+'figures/forecast_'+str(future_days)+'.png')
+  print("*************************** plot_forecast FINISHED")
+
+  # Aproximar mejor la exponencial incluyendo weighted coeffs
+  # https://stackoverflow.com/questions/3433486/how-to-do-exponential-and-logarithmic-curve-fitting-in-python-i-found-only-poly
+
+  # Breve explicacion de lo que hace 'curve_fit'
+  # https://astrofrog.github.io/py4sci/_static/15.%20Fitting%20models%20to%20data.html
+
+
+
+#########################################################################
+## horizontal distribution
+##
+## This plot represents total deaths, recoveries and active cases
+##
+## input:    data_dict         -> countries data
+##           countries         -> countries list
+##           path              -> where to save the figure
+##
+## output:   plot_horizontal_bar.png
+##
+#########################################################################
+def horizontal_distribution(data_dict, countries, path):
+    print(data_dict['US'])
     if len(countries) < 6:
         print("NO HAY SUFICIENTE INFORMACION PARA CREAR LA GRAFICA, HAY QUE PEDIR INFORMACION DE ALMENOS 7 PAISES")
     else:
-        print(list(data_dict['US']))
 
         #Fixeamos y añadimos un nuevo key para US, que por defecto no tiene new recoveries
         data_dict['US']['New Recoveries'] = [0, data_dict['US']['Cases'][-1] - data_dict['US']['Deaths'][-1] - data_dict['US']['Currently Infected'][-1]]
+
 
         category_names = ['Muertes',
                           'Infectados actuales',
@@ -481,28 +482,30 @@ def horizontal_distribution(data_dict, countries):
                 xcenters = starts + widths / 2
                 text_color = 'black'
                 for y, (x, c) in enumerate(zip(xcenters, widths)):
-                    #ax.text(x, y, str(int(c)), ha='center', va='center',color=text_color)
+                    #ax.text(x, y, str(int(c)), ha='center', va='center',color=text_color) #Adding values to bar
                     ax.legend(ncol=len(category_names), bbox_to_anchor=(0, 1),loc='lower left', fontsize='small')
 
             return fig, ax
 
         survey(results, category_names)
-        plt.show()
+        #plt.show()
+        plt.savefig(path+'figures/horizontal_bar.png')
+        print("*************************** plot_horizontal FINISHED")
 
-  
-  
+
+
 #########################################################################
-## obtain_message 
+## obtain_message
 ##
 ## TCreates the message is going to be sent to the channel
 ##
 ## input:    data_dict
-##           countries 
+##           countries
 ##
 ## output:   message
-##         
-#########################################################################  
-def obtain_message(data_dict, countries):  
+##
+#########################################################################
+def obtain_message(data_dict, countries):
   # obtain last spanish values from .txt
   with open('/home/pi/Documents/telegram/covid/log.txt', 'r') as f:
   		lines = f.read().splitlines()
@@ -512,12 +515,12 @@ def obtain_message(data_dict, countries):
   		_infected = float(data[1])
   		_deaths = float(data[2])
   		_recovered = float(data[3])
-  
-  
+
+
   message = ""
   msg_header = "INFO COVID-19\n"
   msg = ""
-  
+
   for country in countries:
     for key in data_dict[country]:
       if key == "Cases":
@@ -532,22 +535,152 @@ def obtain_message(data_dict, countries):
           msg_spain = msg_spain + key + ": " + str(data_dict[country][key][-1]) + " (+" +str(data_dict[country][key][-1]-int(_deaths)) + ")\n\n"
         else:
           msg = msg + key + ": " + str(data_dict[country][key][-1]) + "\n\n"
-      
+
   msg_footer = "\n"
-  
+
   message = msg_header + msg_spain + msg + msg_footer
   return message
 
 
+#########################################################################
+## 3D function - Requires PolyCollection
+##              from mpl_toolkits.mplot3d import Axes3D
+##
+## Creates a 3D plot with accumulated cases
+##
+## input:    data_dict
+##           countries
+##
+## output:   3d plot
+##
+#########################################################################
+def global_contagios_3d(data_dict, countries):
+    print(data_dict['Spain']['Cases'])
+
+    # Fixing random state for reproducibility
+    def polygon_under_graph(xlist, ylist):
+        """
+        Construct the vertex list which defines the polygon filling the space under
+        the (xlist, ylist) line graph.  Assumes the xs are in ascending order.
+        """
+        return [(xlist[0], 0.), *zip(xlist, ylist), (xlist[-1], 0.)]
+
+    fig = plt.figure()
+    ax = fig.gca(projection='3d')
+
+    # Make verts a list such that verts[i] is a list of (x, y) pairs defining
+    # polygon i.
+    verts = []
+
+    # Set up the x sequence
+    #xs = np.linspace(0, len(data_dict['Spain']['Cases'])-10)
+
+    # The ith polygon will appear on the plane y = zs[i]
+    zs = range(4)
+
+    print("PAISES: "+str(countries[3])+"  "+str(countries[2])+"  "+str(countries[1])+"  "+str(countries[0])+"  ")
+    ys = [data_dict[countries[3]]['Cases'], data_dict[countries[2]]['Cases'], data_dict[countries[1]]['Cases'], data_dict[countries[0]]['Cases']]
+    maxim_len = max(len(ys[0]), len(ys[1]), len(ys[2]), len(ys[3]))
+
+    xs = np.arange(0, maxim_len)
+
+    print("ys", ys)
+    ys_final = []
+    for i in range(0, len(ys)):
+        if len(ys[i]) < maxim_len:
+            diff = maxim_len - len(ys[i])
+            zer = [0]*diff
+            ys_f = zer+ys[i]
+            ys_final.append(list(ys_f))
+            ys_f = []
+        else:
+            ys_final.append(list(ys[i]))
+
+    for i in zs:
+        verts.append(polygon_under_graph(xs, ys_final[i]))
+
+    poly = PolyCollection(verts, facecolors=['r', 'g', 'b', 'y'], alpha=.6)
+    ax.add_collection3d(poly, zs=zs, zdir='y')
+
+    ax.set_xlabel('Evolución días')
+    ax.set_ylabel(str(countries[3])+" "+str(countries[2])+" "+str(countries[1])+" "+str(countries[0]))
+    ax.set_zlabel('Casos infectados')
+    ax.set_xlim(0, maxim_len)
+    ax.set_ylim(-1, 4)
+    ax.set_zlim(0, max(ys_final[3]))
+    ax.set_title("Casos acumulados [R,G,B,Y]     "+str(countries[3])+" "+str(countries[2])+" "+str(countries[1])+" "+str(countries[0]))
+
+    plt.show()
 
 
 
+#########################################################################
+## Stacked bar of deaths and cases
+##
+## Creates a double stacket plot of deaths and cases
+##
+## input:    data_dict
+##           countries
+##           number
+##
+## output:   stacket_plot_deaths
+## output:   stacket_plot_cases
+##
+#########################################################################
+def stacket_plot_deaths_and_cases(data_dict, countries, number, path):
+
+    y = []
+    labels = []
+    for i in range(0, number):
+        y.append(data_dict[countries[i]]['Deaths'])
+        labels.append(countries[i])
+    x = np.arange(0, len(y[0]))
+
+    fig, ax = plt.subplots()
+    ax.stackplot(x, y, labels=labels)
+    plt.xlabel('Días')
+    plt.ylabel('Muertes')
+    plt.title('Evolución muertes')
+    ax.legend(loc='upper left')
+    #plt.show()
+
+
+    plt.savefig(path+'figures/stacked_deaths.png')
+    print("*************************** stacked_deaths FINISHED")
+
+    plt.cla()   # Clear axis
+    plt.clf()   # Clear figure
+    plt.close() # Close a figure window
+
+    y = []
+    labels = []
+    for i in range(0, number):
+        y.append(data_dict[countries[i]]['Cases'])
+        labels.append(countries[i])
+    x = np.arange(0, len(y[0]))
+
+    fig, ax = plt.subplots()
+    ax.stackplot(x, y, labels=labels)
+    plt.xlabel('Días')
+    plt.ylabel('Casos')
+    plt.title('Evolución casos')
+    ax.legend(loc='upper left')
+    #plt.show()
+
+
+    plt.savefig(path+'figures/stacked_cases.png')
+    print("*************************** stacked_cases FINISHED")
+
+    plt.cla()   # Clear axis
+    plt.clf()   # Clear figure
+    plt.close() # Close a figure window
 
 
 
 #### Execution space for testing ###
 
-if True:
+if False:
     number_of_countries = 7
     [data_dict, countries] = req_data(number_of_countries)
-    horizontal_distribution(data_dict, countries)
+    stacket_plot_deaths_and_cases(data_dict, countries, 5)
+
