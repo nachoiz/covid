@@ -415,9 +415,80 @@ def plot_forecast(datos, future_days, path):
   
   # Breve explicacion de lo que hace 'curve_fit'
   # https://astrofrog.github.io/py4sci/_static/15.%20Fitting%20models%20to%20data.html
-  
-  
-  
+
+
+
+#########################################################################
+## plot_forecast
+##
+## This plot represents daily deaths w.r.t. days for a group of countries.
+##
+## input:    data_dict         -> countries data
+##           future_days       -> forecast days
+##           path              -> where to save the figure
+##
+## output:   plot_prediction.png'
+##
+#########################################################################
+def horizontal_distribution(data_dict, countries):
+    if len(countries) < 6:
+        print("NO HAY SUFICIENTE INFORMACION PARA CREAR LA GRAFICA, HAY QUE PEDIR INFORMACION DE ALMENOS 7 PAISES")
+    else:
+        print(list(data_dict['US']))
+
+        #Fixeamos y añadimos un nuevo key para US, que por defecto no tiene new recoveries
+        data_dict['US']['New Recoveries'] = [0, data_dict['US']['Cases'][-1] - data_dict['US']['Deaths'][-1] - data_dict['US']['Currently Infected'][-1]]
+
+        category_names = ['Muertes',
+                          'Infectados actuales',
+                          'Recuperados']
+
+        results = {
+            countries[0]: [data_dict[countries[0]]['Deaths'][-1], data_dict[countries[0]]['Currently Infected'][-1],  data_dict[countries[0]]['New Recoveries'][-1], 0, 0],
+            countries[1]: [data_dict[countries[1]]['Deaths'][-1], data_dict[countries[1]]['Currently Infected'][-1],  data_dict[countries[1]]['New Recoveries'][-1], 0, 0],
+            countries[2]: [data_dict[countries[2]]['Deaths'][-1], data_dict[countries[2]]['Currently Infected'][-1],  data_dict[countries[2]]['New Recoveries'][-1], 0, 0],
+            countries[3]: [data_dict[countries[3]]['Deaths'][-1], data_dict[countries[3]]['Currently Infected'][-1],  data_dict[countries[3]]['New Recoveries'][-1], 0, 0],
+            countries[4]: [data_dict[countries[4]]['Deaths'][-1], data_dict[countries[4]]['Currently Infected'][-1],  data_dict[countries[4]]['New Recoveries'][-1], 0, 0],
+            countries[5]: [data_dict[countries[5]]['Deaths'][-1], data_dict[countries[5]]['Currently Infected'][-1],  data_dict[countries[5]]['New Recoveries'][-1], 0, 0],
+        }
+
+        def survey(results, category_names):
+            """
+            Parameters
+            ----------
+            results : dict
+                A mapping from question labels to a list of answers per category.
+                It is assumed all lists contain the same number of entries and that
+                it matches the length of *category_names*.
+            category_names : list of str
+                The category labels.
+            """
+            labels = list(results.keys())
+            data = np.array(list(results.values()))
+            data_cum = data.cumsum(axis=1)
+            category_colors = plt.get_cmap('RdYlGn')(
+                np.linspace(0.15, 0.85, data.shape[1]))
+
+            fig, ax = plt.subplots(figsize=(9.2, 5))
+            ax.invert_yaxis()
+            ax.xaxis.set_visible(False)
+            ax.set_xlim(0, np.sum(data, axis=1).max())
+            column_colors =  ['Lightcoral', 'antiquewhite', 'yellowgreen']
+            for i, (colname, color) in enumerate(zip(category_names, category_colors)):
+                widths = data[:, i]
+                starts = data_cum[:, i] - widths
+                ax.barh(labels, widths, left=starts, height=0.5, label=colname, color=column_colors[i], align='center')
+                xcenters = starts + widths / 2
+                text_color = 'black'
+                for y, (x, c) in enumerate(zip(xcenters, widths)):
+                    #ax.text(x, y, str(int(c)), ha='center', va='center',color=text_color)
+                    ax.legend(ncol=len(category_names), bbox_to_anchor=(0, 1),loc='lower left', fontsize='small')
+
+            return fig, ax
+
+        survey(results, category_names)
+        plt.show()
+
   
   
 #########################################################################
@@ -466,3 +537,17 @@ def obtain_message(data_dict, countries):
   
   message = msg_header + msg_spain + msg + msg_footer
   return message
+
+
+
+
+
+
+
+
+#### Execution space for testing ###
+
+if True:
+    number_of_countries = 7
+    [data_dict, countries] = req_data(number_of_countries)
+    horizontal_distribution(data_dict, countries)
