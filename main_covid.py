@@ -73,12 +73,18 @@ bot = telebot.TeleBot(str(token))
 [message, message_markdown] = obtain_message(data_dict, countries, path)
 print(message)
 
-#if(stamp.time().hour < 8):
-bot.send_message(GROUP_ID, text=message_markdown, parse_mode = 'Markdown')
-	#bot.send_message(CHANNEL_ID, msg)
-
-#if(stamp.time().hour == 10):
-figure_comparison = open(path+'figures/death_last_10_threshold_30.png', 'rb')
-figure_square = open(path+'figures/deaths_daily_square.png', 'rb')
-#bot.send_photo(GROUP_ID, figure_comparison, caption='Comparativa muertes')
-#bot.send_photo(GROUP_ID, figure_square)
+if(stamp.time().hour > 8):
+  bot.send_message(CHANNEL_ID, text=message_markdown, parse_mode = 'Markdown')
+  if(stamp.time().hour == 22):
+    figure_1 = open(path+'figures/death_last_10_threshold_30.png', 'rb')
+    figure_2 = open(path+'figures/deaths_daily_square.png', 'rb')
+    bot.send_photo(CHANNEL_ID, figure_1)
+    bot.send_photo(CHANNEL_ID, figure_2)
+  elif(stamp.time().hour == 20):
+    figure_3 = open(path+'figures/stacked_cases.png', 'rb')
+    figure_4 = open(path+'figures/stacked_deaths.png', 'rb')
+    bot.send_photo(CHANNEL_ID, figure_3)
+    bot.send_photo(CHANNEL_ID, figure_4)
+  elif(stamp.time().hour == 21):
+    figure_5 = open(path+'figures/global_contagios_3d.png', 'rb')
+    bot.send_photo(CHANNEL_ID, figure_5)
