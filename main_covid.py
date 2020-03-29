@@ -36,14 +36,15 @@ import telebot
 from datetime import datetime
 import time
 
-from badfunctions import req_data, plot_death_last_x_days, plot_heat_map, plot_forecast, obtain_message
+from badfunctions import req_data, plot_death_last_x_days, plot_heat_map, plot_forecast, obtain_message, global_contagios_3d, stacket_plot_deaths_and_cases
 
 
 # Raspberry path
-path = '/home/pi/Documents/telegram/covid/'
+path = '/home/pi/Documents/telegram/util/'
+
 
 # Telegram token
-with open('/home/pi/Documents/telegram/util/token.txt') as f:
+with open(path+'token.txt') as f:
     token = f.readline()
     token = token.replace('\n','')
 
@@ -59,6 +60,8 @@ num_countries = 10
 plot_death_last_x_days(data_dict, countries, 10, 30, path)
 plot_heat_map(data_dict, countries, path)
 plot_forecast(data_dict['Spain']['Deaths'], 5, path)
+global_contagios_3d(data_dict, countries, path)
+stacket_plot_deaths_and_cases(data_dict, countries, num_countries, path)
 
 # timestamp
 stamp = datetime.now()
@@ -67,14 +70,15 @@ stamp = datetime.now()
 bot = telebot.TeleBot(str(token))
 
 # Create message
-message = obtain_message(data_dict, countries)
+[message, message_markdown] = obtain_message(data_dict, countries, path)
+print(message)
 
 #if(stamp.time().hour < 8):
-bot.send_message(CHANNEL_ID, message)
+bot.send_message(GROUP_ID, message_markdown, parse_mode = 'Markdown')
 	#bot.send_message(CHANNEL_ID, msg)
 
 #if(stamp.time().hour == 10):
 figure_comparison = open(path+'figures/death_last_10_threshold_30.png', 'rb')
 figure_square = open(path+'figures/deaths_daily_square.png', 'rb')
-bot.send_photo(CHANNEL_ID, figure_comparison)
-bot.send_photo(CHANNEL_ID, figure_square)
+#bot.send_photo(GROUP_ID, figure_comparison, caption='Comparativa muertes')
+#bot.send_photo(GROUP_ID, figure_square)

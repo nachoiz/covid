@@ -20,6 +20,8 @@ import re
 # plots
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
+from matplotlib.collections import PolyCollection
+from mpl_toolkits.mplot3d import Axes3D
 
 # other
 import math
@@ -505,9 +507,9 @@ def horizontal_distribution(data_dict, countries, path):
 ## output:   message
 ##
 #########################################################################
-def obtain_message(data_dict, countries):
+def obtain_message(data_dict, countries, path):
   # obtain last spanish values from .txt
-  with open('/home/pi/Documents/telegram/covid/log.txt', 'r') as f:
+  with open(path+'logs/log.txt', 'r') as f:
   		lines = f.read().splitlines()
   		last_line = lines[-1]
   		data = last_line.split('.')[1]
@@ -517,29 +519,19 @@ def obtain_message(data_dict, countries):
   		_recovered = float(data[3])
 
 
-  message = ""
-  msg_header = "INFO COVID-19\n"
-  msg = ""
+  row_format = "{pais:<12s} | {casos:6d} | {muertos:6d}".format
+  msg = "Country             Cases       Deaths\n--------------------------------\n"
 
   for country in countries:
     for key in data_dict[country]:
       if key == "Cases":
-        if country == "Spain":
-          msg_spain = country + "\n"
-          msg_spain = msg_spain + key + ": " + str(data_dict[country][key][-1]) + " (+" +str(data_dict[country][key][-1]-int(_infected)) + ")\n"
-        else:
-          msg = msg + country + "\n"
-          msg = msg + key + ": " + str(data_dict[country][key][-1]) + "\n"
+          cases = data_dict[country][key][-1]
       elif key == "Deaths":
-        if country == "Spain":
-          msg_spain = msg_spain + key + ": " + str(data_dict[country][key][-1]) + " (+" +str(data_dict[country][key][-1]-int(_deaths)) + ")\n\n"
-        else:
-          msg = msg + key + ": " + str(data_dict[country][key][-1]) + "\n\n"
+          deaths = data_dict[country][key][-1]
+    msg = msg + row_format(pais=country, casos=cases, muertos=deaths) + "\n"
 
-  msg_footer = "\n"
-
-  message = msg_header + msg_spain + msg + msg_footer
-  return message
+  message_markdown = "'''" + msg + "'''"
+  return [msg, message_markdown]
 
 
 #########################################################################
@@ -554,8 +546,8 @@ def obtain_message(data_dict, countries):
 ## output:   3d plot
 ##
 #########################################################################
-def global_contagios_3d(data_dict, countries):
-    print(data_dict['Spain']['Cases'])
+def global_contagios_3d(data_dict, countries, path):
+    #print(data_dict['Spain']['Cases'])
 
     # Fixing random state for reproducibility
     def polygon_under_graph(xlist, ylist):
@@ -602,15 +594,16 @@ def global_contagios_3d(data_dict, countries):
     poly = PolyCollection(verts, facecolors=['r', 'g', 'b', 'y'], alpha=.6)
     ax.add_collection3d(poly, zs=zs, zdir='y')
 
-    ax.set_xlabel('Evolución días')
+    ax.set_xlabel('Evolucion en dias')
     ax.set_ylabel(str(countries[3])+" "+str(countries[2])+" "+str(countries[1])+" "+str(countries[0]))
     ax.set_zlabel('Casos infectados')
     ax.set_xlim(0, maxim_len)
     ax.set_ylim(-1, 4)
     ax.set_zlim(0, max(ys_final[3]))
     ax.set_title("Casos acumulados [R,G,B,Y]     "+str(countries[3])+" "+str(countries[2])+" "+str(countries[1])+" "+str(countries[0]))
-
-    plt.show()
+    #plt.show()
+    plt.savefig(path+'figures/global_contagios_3d.png')
+    print("*************************** global_contagios_3d FINISHED")
 
 
 
@@ -631,16 +624,16 @@ def stacket_plot_deaths_and_cases(data_dict, countries, number, path):
 
     y = []
     labels = []
-    for i in range(0, number):
+    for i in range(0, number-1):
         y.append(data_dict[countries[i]]['Deaths'])
         labels.append(countries[i])
     x = np.arange(0, len(y[0]))
 
     fig, ax = plt.subplots()
     ax.stackplot(x, y, labels=labels)
-    plt.xlabel('Días')
+    plt.xlabel('Dias')
     plt.ylabel('Muertes')
-    plt.title('Evolución muertes')
+    plt.title('Evolucion muertes')
     ax.legend(loc='upper left')
     #plt.show()
 
@@ -654,16 +647,16 @@ def stacket_plot_deaths_and_cases(data_dict, countries, number, path):
 
     y = []
     labels = []
-    for i in range(0, number):
+    for i in range(0, number-1):
         y.append(data_dict[countries[i]]['Cases'])
         labels.append(countries[i])
     x = np.arange(0, len(y[0]))
 
     fig, ax = plt.subplots()
     ax.stackplot(x, y, labels=labels)
-    plt.xlabel('Días')
+    plt.xlabel('Diass')
     plt.ylabel('Casos')
-    plt.title('Evolución casos')
+    plt.title('Evolucion casos')
     ax.legend(loc='upper left')
     #plt.show()
 
