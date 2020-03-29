@@ -74,7 +74,7 @@ bot = telebot.TeleBot(str(token))
 print(message)
 
 #if(stamp.time().hour < 8):
-bot.send_message(GROUP_ID, message_markdown, parse_mode = 'Markdown')
+bot.send_message(GROUP_ID, text=message_markdown, parse_mode = 'Markdown')
 	#bot.send_message(CHANNEL_ID, msg)
 
 #if(stamp.time().hour == 10):

@@ -433,7 +433,7 @@ def plot_forecast(datos, future_days, path):
 ##
 #########################################################################
 def horizontal_distribution(data_dict, countries, path):
-    print(data_dict['US'])
+    #print(data_dict['US'])
     if len(countries) < 6:
         print("NO HAY SUFICIENTE INFORMACION PARA CREAR LA GRAFICA, HAY QUE PEDIR INFORMACION DE ALMENOS 7 PAISES")
     else:
@@ -519,18 +519,23 @@ def obtain_message(data_dict, countries, path):
   		_recovered = float(data[3])
 
 
-  row_format = "{pais:<12s} | {casos:6d} | {muertos:6d}".format
-  msg = "Country             Cases       Deaths\n--------------------------------\n"
+  row_format = "{pais:<8s} | {casos:6d} | {muertos:6d}".format
+  msg = "COVID INFO\nCountry     Cases   Deaths\n---------------------------\n"
 
   for country in countries:
+    # Shorten country's name
+    if (len(country)>7):
+      country_name = country[:7] + "."
+    else:
+      country_name = country
     for key in data_dict[country]:
       if key == "Cases":
           cases = data_dict[country][key][-1]
       elif key == "Deaths":
           deaths = data_dict[country][key][-1]
-    msg = msg + row_format(pais=country, casos=cases, muertos=deaths) + "\n"
+    msg = msg + row_format(pais=country_name, casos=cases, muertos=deaths) + "\n"
 
-  message_markdown = "'''" + msg + "'''"
+  message_markdown = "```" + msg + "```"
   return [msg, message_markdown]
 
 
