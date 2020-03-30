@@ -82,10 +82,11 @@ if(stamp.time().hour > 8):
     bot.send_photo(CHANNEL_ID, figure_1)
     bot.send_photo(CHANNEL_ID, figure_2)
   elif(stamp.time().hour == 20):
-    figure_3 = open(path+'figures/stacked_cases.png', 'rb')
-    figure_4 = open(path+'figures/stacked_deaths.png', 'rb')
-    bot.send_photo(CHANNEL_ID, figure_3)
-    bot.send_photo(CHANNEL_ID, figure_4)
+    print("")
+    #figure_3 = open(path+'figures/stacked_cases.png', 'rb')
+    #figure_4 = open(path+'figures/stacked_deaths.png', 'rb')
+    #bot.send_photo(CHANNEL_ID, figure_3)
+    #bot.send_photo(CHANNEL_ID, figure_4)
   elif(stamp.time().hour == 21):
     figure_5 = open(path+'figures/global_contagios_3d.png', 'rb')
     bot.send_photo(CHANNEL_ID, figure_5)

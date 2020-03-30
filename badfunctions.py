@@ -552,31 +552,41 @@ def obtain_message(data_dict, countries, path):
     return chr(ord(code[0]) + OFFSET) + chr(ord(code[1]) + OFFSET)
     
   # obtain last spanish values from .txt
-  with open(path+'logs/log.txt', 'r') as f:
-  		lines = f.read().splitlines()
-  		last_line = lines[-1]
-  		data = last_line.split('.')[1]
-  		data = data.split(',')
-  		_infected = float(data[1])
-  		_deaths = float(data[2])
-  		_recovered = float(data[3])
+  last_info = []
+  with open(path+"last_data.txt", 'r') as f:
+    for elem in f:
+      line = elem.split(',')
+      f_name = line[0]
+      f_cases = line[1].replace('x','').replace('\n','')
+      f_death = line[2].replace('x','').replace('\n','')
+      last_info.append([f_name, f_cases, f_death])
+  print(last_info)
+  
+
+      
+     
+  with open(path+"last_data.txt", "w") as text_file:
+    for country in countries:
+      text_file.write("{},{:x<6d},{:x<6d}\n".format(country,data_dict[country]['Cases'][-1],data_dict[country]['Deaths'][-1]))
 
 
-  row_format = "{pais:<8s} | {casos:6d} | {muertos:6d}".format
-  msg = "COVID INFO\nCountry     Cases   Deaths\n---------------------------\n"
+  row_format = "{pais:<7s} | {casos:>7s} | {muertos:>7s}".format
+  msg = "COVID INFO\nCountry    Cases    Deaths\n---------------------------\n"
 
   i = 1
   flag_code_list = []
   for country in countries:
-    # Search in the list the most similar country
-    #country_possible_name = difflib.get_close_matches(country, country_code_list)
     
-    #print(country_code_list)
-    #print(countries)
-    #print(country_code2_list)
-    
+    # Look for country last data
+    cases_old = 0
+    death_old = 0
+    for i in range(0, len(countries)):
+      if(country == last_info[i][0]):
+        cases_old = last_info[i][1]
+        death_old = last_info[i][2]
+        
+    # Search for the two-letter code of each country
     try:
-      #code = dcountry2code[country_possible_name]
       if len(country)>3:
         ind = country_code_list.index(country)
         flag_code = country_code2_list[ind]
@@ -587,22 +597,25 @@ def obtain_message(data_dict, countries, path):
     except:
       flag_code = '-'
       print("NO code found")
-    print(flag_code)
-    #flag_code_list.append(flag_code)
-    
-    # Shorten country's name
-    '''
-    if (len(country)>7):
-      country_name = country[:7] + "."
-    else:
-      country_name = country
-    '''
+
     country_name = flag_code + " " + flag(flag_code)
+
+    # Create message
     for key in data_dict[country]:
       if key == "Cases":
-          cases = data_dict[country][key][-1]
+        cases = data_dict[country][key][-1]
+        print(cases)
+        print(cases_old)
+        if (cases - int(cases_old) != 0):
+          cases = str(cases) + "*"
+        else:
+          cases = str(cases) + " "
       elif key == "Deaths":
-          deaths = data_dict[country][key][-1]
+        deaths = data_dict[country][key][-1]
+        if (deaths - int(death_old) != 0):
+          deaths = str(deaths) + "*"
+        else:
+          deaths = str(deaths) + " "
     msg = msg + row_format(pais=country_name, casos=cases, muertos=deaths) + "\n"
     i = i+1
 
