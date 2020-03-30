@@ -28,6 +28,9 @@ import math
 import numpy as np
 import scipy.optimize as opt
 
+import difflib
+import warnings
+warnings.filterwarnings("ignore")
 
 #########################################################################
 ## req_data
@@ -155,6 +158,7 @@ def req_data(number_of_countries):
     page_source = str(response.read())
 
     for i in range(0, number_of_countries-1):
+      try:
         print("Analysing "+str(countries[i]))
         #Reference for the source code seaching
         #href="/coronavirus/country/usa/">
@@ -174,6 +178,9 @@ def req_data(number_of_countries):
 
         data_dict[countries[i]]['Daily Deaths'].append(new_deaths)
         data_dict[countries[i]]['Deaths'].append(data_dict[countries[i]]['Deaths'][len(data_dict[countries[i]]['Deaths'])-1] + new_deaths)
+      except:
+        print("Error catching "+countries[i])
+        continue
 
     print("End of data gathering!")
     return [data_dict, countries]
@@ -508,6 +515,42 @@ def horizontal_distribution(data_dict, countries, path):
 ##
 #########################################################################
 def obtain_message(data_dict, countries, path):
+  #txtfile = open(path+"two_code_country.txt", 'r')
+  #codeList = [line.split(' ') for line in txtfile.readlines()]
+  #print(codeList)
+
+  dcountry2code = {}
+  country_code_list = []
+  country_code2_list = []
+  with open(path+"two_code_country.txt") as f:
+    for line in f:
+      (key, val) = line.split('/')
+      country_code2_list.append(key)
+      country_code_list.append(val)
+      #dcountry2code[key] = val
+      
+    dcountry2code = {}
+
+    i = 0
+    for key in country_code_list:
+        # Dictionary of a single country
+        dcountry2code[key] = country_code2_list[i]
+        i = i + 1
+  '''   
+  for k, v in dcountry2code.items():
+    print(k, v)
+  '''
+  
+  country_code_list = [x.replace('\n', '') for x in country_code_list]
+  country_code_list = [x.replace('\t', '') for x in country_code_list]
+  
+  #print(country_code_list)
+  OFFSET = 127462 - ord('A')
+
+  def flag(code):
+    code = code.upper()
+    return chr(ord(code[0]) + OFFSET) + chr(ord(code[1]) + OFFSET)
+    
   # obtain last spanish values from .txt
   with open(path+'logs/log.txt', 'r') as f:
   		lines = f.read().splitlines()
@@ -522,18 +565,46 @@ def obtain_message(data_dict, countries, path):
   row_format = "{pais:<8s} | {casos:6d} | {muertos:6d}".format
   msg = "COVID INFO\nCountry     Cases   Deaths\n---------------------------\n"
 
+  i = 1
+  flag_code_list = []
   for country in countries:
+    # Search in the list the most similar country
+    #country_possible_name = difflib.get_close_matches(country, country_code_list)
+    
+    #print(country_code_list)
+    #print(countries)
+    #print(country_code2_list)
+    
+    try:
+      #code = dcountry2code[country_possible_name]
+      if len(country)>3:
+        ind = country_code_list.index(country)
+        flag_code = country_code2_list[ind]
+      elif (country == "UK"):
+        flag_code = "GB"
+      else:
+        flag_code = country
+    except:
+      flag_code = '-'
+      print("NO code found")
+    print(flag_code)
+    #flag_code_list.append(flag_code)
+    
     # Shorten country's name
+    '''
     if (len(country)>7):
       country_name = country[:7] + "."
     else:
       country_name = country
+    '''
+    country_name = flag_code + " " + flag(flag_code)
     for key in data_dict[country]:
       if key == "Cases":
           cases = data_dict[country][key][-1]
       elif key == "Deaths":
           deaths = data_dict[country][key][-1]
     msg = msg + row_format(pais=country_name, casos=cases, muertos=deaths) + "\n"
+    i = i+1
 
   message_markdown = "```" + msg + "```"
   return [msg, message_markdown]
@@ -575,13 +646,13 @@ def global_contagios_3d(data_dict, countries, path):
     # The ith polygon will appear on the plane y = zs[i]
     zs = range(4)
 
-    print("PAISES: "+str(countries[3])+"  "+str(countries[2])+"  "+str(countries[1])+"  "+str(countries[0])+"  ")
+    #print("PAISES: "+str(countries[3])+"  "+str(countries[2])+"  "+str(countries[1])+"  "+str(countries[0])+"  ")
     ys = [data_dict[countries[3]]['Cases'], data_dict[countries[2]]['Cases'], data_dict[countries[1]]['Cases'], data_dict[countries[0]]['Cases']]
     maxim_len = max(len(ys[0]), len(ys[1]), len(ys[2]), len(ys[3]))
 
     xs = np.arange(0, maxim_len)
 
-    print("ys", ys)
+    #print("ys", ys)
     ys_final = []
     for i in range(0, len(ys)):
         if len(ys[i]) < maxim_len:
