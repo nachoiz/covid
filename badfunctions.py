@@ -758,11 +758,153 @@ def stacket_plot_deaths_and_cases(data_dict, countries, number, path):
     plt.close() # Close a figure window
 
 
+#########################################################################
+## Ro contagious tax
+##
+## Creates an stacked plot with R0 of each country (cases, deaths)
+##
+## input:    data_dict
+##           countries
+##           number
+##           Path
+##
+## output:   R0
+##
+#########################################################################
+def evolution_R0(data_dict, countries, number, path):
+    #plt.style.use('fivethirtyeight')
+    #plt.style.context('Solarize_Light2')
+
+
+                    ### Deaths ##
+
+    days_plotted = 15
+    all_cases = []
+    all_cases_sum = []
+    maxv = 0
+    minv = 2
+    for j in range(0, number):
+        cases = []
+        for i in range(0, len(data_dict[countries[j]]['Deaths'])):
+            cases1 = data_dict[countries[j]]['Deaths'][len(data_dict[countries[j]]['Deaths'])-1-i]
+            cases2 = data_dict[countries[j]]['Deaths'][len(data_dict[countries[j]]['Deaths'])-2-i]
+
+            if cases2 == 0:
+                cases.append(0)
+            else:
+                cases.append(round(cases1/cases2, 3))
+
+        cases.reverse()
+        leng = len(data_dict[countries[number]]['Deaths'])
+        if max(cases[leng-days_plotted-1:leng-1]) > maxv:
+            maxv = max(cases[leng-days_plotted-1:leng-1])
+        if min(cases[leng-days_plotted-1:leng-1]) < minv and min(cases[leng-days_plotted-1:leng-1]) != 0:
+            minv = min(cases[leng-days_plotted-1:leng-1])
+        all_cases.append(cases)
+
+    cummulative = [0]*days_plotted
+    for i in range(0, number):
+        leng = len(data_dict[countries[number]]['Deaths'])
+        second = data_dict[countries[number]]['Deaths'][leng-days_plotted-1:leng-1]
+        cummulative = [x + y for x, y in zip(cummulative, second)]
+
+
+    #Select how many days you want to see
+    x = np.arange(0, days_plotted)
+    base = datetime.datetime.today()
+    date_list = [base - datetime.timedelta(days=x) for x in range(days_plotted)]
+    date_list.reverse()
+
+    fig, ax = plt.subplots()
+
+    ax2 = ax.twinx()
+    for i in range(0, len(all_cases)):
+        ax2.plot(date_list, all_cases[i][len(all_cases[i])-days_plotted-1:len(all_cases[i])-1], label = countries[i])
+        ax2.set_title("Tasa y acumulado de muertes")
+        #print(countries[i])
+        #print(all_cases[i][len(all_cases[i])-days_plotted-1:len(all_cases[i])-1])
+        #print(" ")
+
+    ax.fill_between(date_list, 0, cummulative, color='#BAD9FF', alpha=0.5)
+    ax.set_ylabel("Muertes acumuladas")
+    ax2.set_ylabel("Incremento")
+    ax2.set_ylim(minv-0.1*minv, maxv+0.1*maxv)
+    ax2.legend(loc='upper left')
+    plt.gcf().autofmt_xdate()
+    #plt.show()
+    plt.savefig(path+'figures/ro_muertes.png')
+    print("*************************** R0 Muertes FINISHED")
+
+                             ### Cases ##
+
+    days_plotted = 15
+    all_cases = []
+    all_cases_sum = []
+    maxv = 0
+    minv = 2
+    for j in range(0, number):
+        cases = []
+        for i in range(0, len(data_dict[countries[j]]['Cases'])):
+            cases1 = data_dict[countries[j]]['Cases'][len(data_dict[countries[j]]['Cases'])-1-i]
+            cases2 = data_dict[countries[j]]['Cases'][len(data_dict[countries[j]]['Cases'])-2-i]
+
+            if cases2 == 0:
+                cases.append(0)
+            else:
+                cases.append(round(cases1/cases2, 3))
+
+        cases.reverse()
+        leng = len(data_dict[countries[number]]['Cases'])
+        if max(cases[leng-days_plotted-1:leng-1]) > maxv:
+            maxv = max(cases[leng-days_plotted-1:leng-1])
+        if min(cases[leng-days_plotted-1:leng-1]) < minv and min(cases[leng-days_plotted-1:leng-1]) != 0:
+            minv = min(cases[leng-days_plotted-1:leng-1])
+        all_cases.append(cases)
+
+    cummulative = [0]*days_plotted
+    for i in range(0, number):
+        leng = len(data_dict[countries[number]]['Cases'])
+        second = data_dict[countries[number]]['Cases'][leng-days_plotted-1:leng-1]
+        cummulative = [x + y for x, y in zip(cummulative, second)]
+
+
+    #Select how many days you want to see
+    x = np.arange(0, days_plotted)
+    base = datetime.datetime.today()
+    date_list = [base - datetime.timedelta(days=x) for x in range(days_plotted)]
+    date_list.reverse()
+
+    fig, ax = plt.subplots()
+
+    ax2 = ax.twinx()
+    for i in range(0, len(all_cases)):
+        ax2.plot(date_list, all_cases[i][len(all_cases[i])-days_plotted-1:len(all_cases[i])-1], label = countries[i])
+        ax2.set_title("Tasa y acumulado de casos")
+        #print(countries[i])
+        #print(all_cases[i][len(all_cases[i])-days_plotted-1:len(all_cases[i])-1])
+        #print(" ")
+
+    ax.fill_between(date_list, 0, cummulative, color='#BAD9FF', alpha=0.5)
+    ax.set_ylabel("Casos acumulados")
+    ax2.set_ylabel("Incremento")
+    ax2.set_ylim(minv-0.1*minv, maxv+0.1*maxv)
+    ax2.legend(loc='upper left')
+    plt.gcf().autofmt_xdate()
+    #plt.show()
+
+    plt.savefig(path+'figures/ro_casos.png')
+    print("*************************** R0 Casos FINISHED")
+
+
 
 #### Execution space for testing ###
 
 if False:
-    number_of_countries = 7
+    print("Entering True")
+    path = "Hello"
+    number_of_countries = 11
     [data_dict, countries] = req_data(number_of_countries)
-    stacket_plot_deaths_and_cases(data_dict, countries, 5)
+    #stacket_plot_deaths_and_cases(data_dict, countries, 10, path)
+    evolution_R0(data_dict, countries, 5, path)
+
 
