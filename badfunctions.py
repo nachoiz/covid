@@ -169,6 +169,7 @@ def req_data(number_of_countries):
         h_ref = str("href=\"/coronavirus/country/"+str(countries[i].lower())+"/\">")
 
         divided = (page_source.split(h_ref)[0]).split("</strong>")
+
         new_cases = int((divided[len(divided) - 3].split("<strong>")[1]).split("new cases")[0])
         new_deaths = int((divided[len(divided) - 2].split("<strong>")[1]).split("new deaths")[0])
 
@@ -176,6 +177,7 @@ def req_data(number_of_countries):
         data_dict[countries[i]]['Currently Infected'].append(data_dict[countries[i]]['Currently Infected'][len(data_dict[countries[i]]['Currently Infected'])-1] + new_cases)
         data_dict[countries[i]]['Daily Cases'].append(new_cases)
         data_dict[countries[i]]['Cases'].append(data_dict[countries[i]]['Cases'][len(data_dict[countries[i]]['Cases'])-1] + new_cases)
+        data_dict[countries[i]]['status'] = 1
 
         if countries[i] is not 'US':
             data_dict[countries[i]]['New Cases'].append(new_cases)
@@ -184,6 +186,7 @@ def req_data(number_of_countries):
         data_dict[countries[i]]['Deaths'].append(data_dict[countries[i]]['Deaths'][len(data_dict[countries[i]]['Deaths'])-1] + new_deaths)
       except:
         print("Error catching "+countries[i])
+        data_dict[countries[i]]['status'] = 0
         continue
 
     print("End of data gathering!")
@@ -906,11 +909,15 @@ def evolution_R0(data_dict, countries, path):
 
 #### Execution space for testing ###
 
-if True:
+if False:
     print("Entering True")
     path = "Hello"
     number_of_countries = 11
     [data_dict, countries] = req_data(number_of_countries)
+
+    for i in range(0, len(data_dict)):
+        print(countries[i])
+        print(data_dict[countries[i]]['status'])
     #stacket_plot_deaths_and_cases(data_dict, countries, 10, path)
     evolution_R0(data_dict, countries, 5, path)
 
