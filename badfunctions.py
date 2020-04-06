@@ -72,6 +72,10 @@ def req_data(number_of_countries):
             countries[i] = 'US'
             init = 1
             fin = 6
+        elif countries[i] == 'UK' or countries[i] == 'Turkey' or countries[i] == 'Switzerland':
+            init = 1
+            fin = 6
+
         elif countries[i] == 'S. Korea':
             countries[i] = 'south-korea'
 
@@ -899,7 +903,7 @@ def evolution_R0(data_dict, countries, number, path):
 
 #### Execution space for testing ###
 
-if False:
+if True:
     print("Entering True")
     path = "Hello"
     number_of_countries = 11
