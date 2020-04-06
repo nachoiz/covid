@@ -53,7 +53,7 @@ GROUP_ID = -1001199015924
 CHANNEL_ID = -1001470969008
 
 # Extract data
-num_countries = 10
+num_countries = 6
 [data_dict, countries] = req_data(num_countries)
 
 # Plots
@@ -90,6 +90,7 @@ if(stamp.time().hour > 8):
     bot.send_photo(CHANNEL_ID, figure_4)
   elif(stamp.time().hour == 18):
     figure_5 = open(path+'figures/ro_casos.png', 'rb')
+    bot.send_photo(CHANNEL_ID, figure_5)
   elif(stamp.time().hour == 21):
     figure_6 = open(path+'figures/global_contagios_3d.png', 'rb')
     bot.send_photo(CHANNEL_ID, figure_6)
