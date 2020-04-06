@@ -403,9 +403,9 @@ def plot_forecast(datos, future_days, path):
   # popt -> best-fit parameters for 'a' and 'b'
   # pcov -> true variance and covariance of the parameters
   popt, pcov = opt.curve_fit(func,x0, y0)
-  print("The fist parameters are:")
-  print("a =", popt[0], "+/-", pcov[0,0]**0.5)
-  print("b =", popt[1], "+/-", pcov[1,1]**0.5)
+  #print("The fist parameters are:")
+  #print("a =", popt[0], "+/-", pcov[0,0]**0.5)
+  #print("b =", popt[1], "+/-", pcov[1,1]**0.5)
 
   #x = np.linspace(20,40)
 
@@ -775,13 +775,15 @@ def stacket_plot_deaths_and_cases(data_dict, countries, number, path):
 ## output:   R0
 ##
 #########################################################################
-def evolution_R0(data_dict, countries, number, path):
+def evolution_R0(data_dict, countries, path):
     #plt.style.use('fivethirtyeight')
     #plt.style.context('Solarize_Light2')
+    number=len(countries)-1
 
-
-                    ### Deaths ##
-
+    ### Deaths ##
+    #print(number)
+    #print(countries)
+    
     days_plotted = 15
     all_cases = []
     all_cases_sum = []
@@ -799,6 +801,7 @@ def evolution_R0(data_dict, countries, number, path):
                 cases.append(round(cases1/cases2, 3))
 
         cases.reverse()
+        
         leng = len(data_dict[countries[number]]['Deaths'])
         if max(cases[leng-days_plotted-1:leng-1]) > maxv:
             maxv = max(cases[leng-days_plotted-1:leng-1])
