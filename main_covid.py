@@ -36,7 +36,7 @@ import telebot
 from datetime import datetime
 import time
 
-from badfunctions import req_data, plot_death_last_x_days, plot_heat_map, plot_forecast, obtain_message, global_contagios_3d, stacket_plot_deaths_and_cases, evolution_R0
+from badfunctions import req_data, plot_death_last_x_days, plot_heat_map, plot_forecast, obtain_message, global_contagios_3d, stacket_plot_deaths_and_cases, evolution_R0, plot_cases_last_x_days
 
 
 # Raspberry path
@@ -53,13 +53,17 @@ GROUP_ID = -1001199015924
 CHANNEL_ID = -1001470969008
 
 # Extract data
-num_countries = 6
+num_countries = 12
 [data_dict, countries] = req_data(num_countries)
 
 # Plots
 plot_death_last_x_days(data_dict, countries, 10, 30, path)
-plot_heat_map(data_dict, countries, path)
-plot_forecast(data_dict['Spain']['Deaths'], 5, path)
+plot_cases_last_x_days(data_dict, countries, 10, 100, path)
+
+# usar 'deaths' en vez de 'dailydeaths'
+#plot_heat_map(data_dict, countries, path)
+#plot_forecast(data_dict['Spain']['Deaths'], 5, path)
+
 global_contagios_3d(data_dict, countries, path)
 stacket_plot_deaths_and_cases(data_dict, countries, num_countries, path)
 evolution_R0(data_dict, countries, path)
@@ -74,14 +78,15 @@ bot = telebot.TeleBot(str(token))
 [message, message_markdown] = obtain_message(data_dict, countries, path)
 print(message)
 
-
 if(stamp.time().hour > 8):
   bot.send_message(CHANNEL_ID, text=message_markdown, parse_mode = 'Markdown')
   if(stamp.time().hour == 22):
     figure_1 = open(path+'figures/death_last_10_threshold_30.png', 'rb')
-    figure_2 = open(path+'figures/deaths_daily_square.png', 'rb')
+    figure_1b = open(path+'figures/case_last_10_threshold_100.png', 'rb')
+    #figure_2 = open(path+'figures/deaths_daily_square.png', 'rb')
     bot.send_photo(CHANNEL_ID, figure_1)
-    bot.send_photo(CHANNEL_ID, figure_2)
+    bot.send_photo(CHANNEL_ID, figure_1b)
+    #bot.send_photo(CHANNEL_ID, figure_2)
   elif(stamp.time().hour == 12):
     print("")
     figure_3 = open(path+'figures/stacked_cases.png', 'rb')

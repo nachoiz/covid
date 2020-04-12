@@ -72,7 +72,7 @@ def req_data(number_of_countries):
             countries[i] = 'US'
             init = 1
             fin = 6
-        elif countries[i] == 'UK' or countries[i] == 'Turkey' or countries[i] == 'Switzerland':
+        elif countries[i] == 'UK' or countries[i] == 'Turkey' or countries[i] == 'Switzerland' or countries[i] == 'Netherlands':
             init = 1
             fin = 6
 
@@ -81,19 +81,20 @@ def req_data(number_of_countries):
 
         url = "https://www.worldometers.info/coronavirus/country/"+str(countries[i]+"/")
         req = Request(url, headers = {"User-Agent": "Mozilla/5.0"})
-        #response = urlopen()
         response = urlopen(req)
         page_source = str(response.read())
+
         str_ref = '<script type="text/javascript">'
         divided = page_source.split(str_ref)
 
         list_of_datatype = []
         name_country = []
         data_country = []
+        # HAY QUE CALCULAR 'fin' ANTES!!!!!
         for steps in range(init, fin):
             divided2 = divided[steps].split('</script>')[0]
             name = divided2.split('name:')
-
+            
             if len(name)>2:
                 name1 = (str(name[1].split(',')[0])).replace('\\', '')
                 name2 = (str(name[2].split(',')[0])).replace('\\', '')
@@ -103,7 +104,7 @@ def req_data(number_of_countries):
 
             if len(name) == 2 and  name[0] == name [1]:
                 name = [name[0]]
-
+            #print(len(name))
             for n in range(0, len(name)):
                 name_in = name[n]
 
@@ -113,7 +114,8 @@ def req_data(number_of_countries):
                     lst_tosave = ast.literal_eval(data[1].replace("null", str(-1)).replace("nan", str(-1)))
                     data_country.append(lst_tosave)
         general_data.append([name_country, data_country])
-
+        
+    
     # Creating an empty dict from list of lists
     # The current structure of data is:
     #       list = [[key1, key2, ...],[val1, val2, ...]]
@@ -149,46 +151,71 @@ def req_data(number_of_countries):
         i = i + 1
 
 
-    #N = 100
-    #y = list(data_dict['Spain']['Daily Deaths'])
-
+    #
+    # Asking for realtime data
+    #
     print(" ")
     print('Starting realtime request...')
-    #Asking for realtime data
 
-    url = "https://www.worldometers.info/coronavirus/#countries"
-    req = Request(url, headers = {"User-Agent": "Mozilla/5.0"})
-    response = urlopen(req)
-    page_source = str(response.read())
 
     for i in range(0, number_of_countries-1):
+    #for i in range(0, 1):
+      url = "https://www.worldometers.info/coronavirus/country/{}".format(countries[i])
+      req = Request(url, headers = {"User-Agent": "Mozilla/5.0"})
+      response = urlopen(req)
+      page_source = str(response.read())
       try:
         print("Analysing "+str(countries[i]))
-        #Reference for the source code seaching
-        #href="/coronavirus/country/usa/">
-        h_ref = str("href=\"/coronavirus/country/"+str(countries[i].lower())+"/\">")
 
-        divided = (page_source.split(h_ref)[0]).split("</strong>")
+        # Obtain html tree
+        new_data = page_source.split('<div id="maincounter-wrap"')
+        
+        # Find cases inside html tree
+        new_cases = new_data[1].split('<div class="maincounter-number">')
+        new_cases = new_cases[1].split('/span>')
+        new_cases = re.search('>(.*)<', new_cases[0])
 
-        new_cases = int((divided[len(divided) - 3].split("<strong>")[1]).split("new cases")[0])
-        new_deaths = int((divided[len(divided) - 2].split("<strong>")[1]).split("new deaths")[0])
+        # Find deaths inside html tree
+        new_deaths = new_data[2].split('<div class="maincounter-number">')
+        new_deaths = new_deaths[1].split('/span>')
+        new_deaths = re.search('>(.*)<', new_deaths[0])
 
+        # from re match object to string
+        new_cases = new_cases.group(1)
+        new_deaths = new_deaths.group(1)
+
+        # remove blank space and cast to int
+        new_cases = int(new_cases.replace(' ','').replace(',',''))
+        new_deaths = int(new_deaths.replace(' ','').replace(',',''))
+
+        # Last cases/deaths
+        last_cases = data_dict[countries[i]]['Cases'][-1]
+        last_deaths = data_dict[countries[i]]['Deaths'][-1]
+        
         #Adding realtime data
-        data_dict[countries[i]]['Currently Infected'].append(data_dict[countries[i]]['Currently Infected'][len(data_dict[countries[i]]['Currently Infected'])-1] + new_cases)
-        data_dict[countries[i]]['Daily Cases'].append(new_cases)
-        data_dict[countries[i]]['Cases'].append(data_dict[countries[i]]['Cases'][len(data_dict[countries[i]]['Cases'])-1] + new_cases)
-        data_dict[countries[i]]['status'] = 1
-
-        if countries[i] is not 'US':
-            data_dict[countries[i]]['New Cases'].append(new_cases)
-
-        data_dict[countries[i]]['Daily Deaths'].append(new_deaths)
-        data_dict[countries[i]]['Deaths'].append(data_dict[countries[i]]['Deaths'][len(data_dict[countries[i]]['Deaths'])-1] + new_deaths)
+        # New cases/deaths are the current TOTAL cases/deaths
+        delta_cases = new_cases - last_cases
+        delta_deaths = new_deaths - last_deaths
+        
+        #data_dict[countries[i]]['_Cases'] = delta_cases
+        #data_dict[countries[i]]['_Deaths'] = delta_deaths
+        
+        data_dict[countries[i]]['Cases'][-1] = last_cases + delta_cases
+        data_dict[countries[i]]['Deaths'][-1] = last_deaths + delta_deaths
+                
+        try:
+            data_dict[countries[i]]['Daily Cases'].append(delta_cases)
+            data_dict[countries[i]]['Daily Deaths'].append(delta_deaths)
+        except:
+            print("Error adding realtime for "+countries[i])
+        #print(data_dict[countries[i]]['Cases'])
+        #print("")
       except:
         print("Error catching "+countries[i])
         data_dict[countries[i]]['status'] = 0
         continue
-
+        
+    
     print("End of data gathering!")
     return [data_dict, countries]
 
@@ -266,6 +293,63 @@ def plot_death_last_x_days(data_dict, countries, days, death_threshold, path):
     fig.savefig(path+'figures/death_last_'+str(days)+'_threshold_'+str(death_threshold)+'.png')
     print("*************************** plot_death_last_x_days FINISHED")
 
+
+def plot_cases_last_x_days(data_dict, countries, days, death_threshold, path):
+    country_list = []
+    country_death_list = []
+
+    for country in countries:
+        country_list = list(data_dict[country]['Cases'])
+        country_death_list.append(country_list)
+
+    ind10_list = []
+    list10 = []
+
+    # set the threshold
+    #death_threshold = 30
+    for pais in country_death_list:
+        ind10 = 0
+        for elem in pais:
+            if elem >= death_threshold:
+                ind10 = pais.index(elem)
+                list10.append(pais[ind10:])
+                break
+        ind10_list.append(ind10)
+
+    # Plot
+    lis_country = []
+    lis_total = []
+    for i in range(0, len(list10)):
+        lis = np.clip(list10[i], days, 10000000)
+        for j in range(0, len(lis)-1):
+            if lis[j] != days:
+                lis_country.append(lis[j])
+        lis_total.append(lis_country)
+        lis_country = []
+
+    # Create figure
+    fig = plt.figure()
+
+    for i in range(0, len(lis_total)):
+        plt.plot(lis_total[i], label=countries[i])
+
+    plt.legend(loc='lower right')
+
+    ax = fig.add_subplot(111)
+    ax.tick_params(labeltop=False, labelright=True)
+    ax.grid(True, linestyle='-.')
+
+    plt.yscale('log')
+    locs, labels = plt.yticks()                     # Get locations and labels
+    print(locs)
+    plt.yticks([locs[2], locs[3], locs[4], locs[5]], [100, 1000, 10000, int(1e5)])    # Set locations and labels
+
+    plt.xlabel('Dias', fontsize=14)
+    plt.ylabel('Casos', fontsize=14)
+    plt.title('Dias desde el caso confirmado '+str(death_threshold))
+    #plt.show()
+    fig.savefig(path+'figures/case_last_'+str(days)+'_threshold_'+str(death_threshold)+'.png')
+    print("*************************** plot_case_last_x_days FINISHED")
 
 #########################################################################
 ## plot_heat_map
@@ -535,7 +619,7 @@ def obtain_message(data_dict, countries, path):
       country_code2_list.append(key)
       country_code_list.append(val)
       #dcountry2code[key] = val
-      
+    
     dcountry2code = {}
 
     i = 0
@@ -567,7 +651,7 @@ def obtain_message(data_dict, countries, path):
       f_cases = line[1].replace('x','').replace('\n','')
       f_death = line[2].replace('x','').replace('\n','')
       last_info.append([f_name, f_cases, f_death])
-  print(last_info)
+  #print(last_info)
   
 
       
@@ -577,7 +661,7 @@ def obtain_message(data_dict, countries, path):
       text_file.write("{},{:x<6d},{:x<6d}\n".format(country,data_dict[country]['Cases'][-1],data_dict[country]['Deaths'][-1]))
 
 
-  row_format = "{pais:<7s} | {casos:>7s} | {muertos:>7s}".format
+  row_format = "{pais:<6s} | {casos:>8s} | {muertos:>7s}".format
   msg = "COVID INFO\nCountry    Cases    Deaths\n---------------------------\n"
 
   i = 1
@@ -593,6 +677,7 @@ def obtain_message(data_dict, countries, path):
         death_old = last_info[i][2]
         
     # Search for the two-letter code of each country
+    print(country)
     try:
       if len(country)>3:
         ind = country_code_list.index(country)
@@ -606,13 +691,12 @@ def obtain_message(data_dict, countries, path):
       print("NO code found")
 
     country_name = flag_code + " " + flag(flag_code)
+    print(country_name)
 
     # Create message
     for key in data_dict[country]:
       if key == "Cases":
         cases = data_dict[country][key][-1]
-        print(cases)
-        print(cases_old)
         if (cases - int(cases_old) != 0):
           cases = str(cases) + "*"
         else:
