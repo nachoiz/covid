@@ -365,13 +365,18 @@ def plot_cases_last_x_days(data_dict, countries, days, death_threshold, path):
 #########################################################################
 def plot_heat_map(data_dict, countries, path):
   # Nice to have 9 elements and 9 countries to build up a square matrix
-  mat = np.zeros(shape=(len(countries),9))
-  i = 0
+  list_countries = countries[:6]
+  mat = np.zeros(shape=(len(list_countries),9))
+  iRow = 0
   vector = []
-  for country in countries:
-      vector.append(data_dict[country]['Daily Deaths'][-9:])
-      mat[i,:] = vector[i]
-      i = i+1
+
+  for country in list_countries:
+      vector = [(data_dict[country]['Deaths'][i+1]-data_dict[country]['Deaths'][i]) for i in range(0,len(data_dict[country]['Deaths'])-1)]
+      #print(vector[:-9])
+      #vector.append(data_dict[country]['Daily Deaths'][-9:])
+      mat[iRow,:] = vector[-9:]
+      iRow = iRow+1
+      vector = []
 
   # Create figure
   fig, ax = plt.subplots()
@@ -379,7 +384,7 @@ def plot_heat_map(data_dict, countries, path):
 
   # We want to show all ticks...
   ax.set_xticks(np.arange(9))
-  ax.set_yticks(np.arange(len(countries)))
+  ax.set_yticks(np.arange(len(list_countries)))
   # ... and label them with the respective list entries
 
   dias = ["dia "+str(i) for i in range(10)]
@@ -398,7 +403,7 @@ def plot_heat_map(data_dict, countries, path):
   plt.setp(ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
 
   # Loop over data dimensions and create text annotations.
-  for i in range(len(countries)):
+  for i in range(len(list_countries)):
       for j in range(9):
           text = ax.text(j, i, int(mat[i, j]),ha="center", va="center", color="w")
 

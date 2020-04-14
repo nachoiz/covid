@@ -61,7 +61,8 @@ plot_death_last_x_days(data_dict, countries, 10, 30, path)
 plot_cases_last_x_days(data_dict, countries, 10, 100, path)
 
 # usar 'deaths' en vez de 'dailydeaths'
-#plot_heat_map(data_dict, countries, path)
+plot_heat_map(data_dict, countries, path)
+
 #plot_forecast(data_dict['Spain']['Deaths'], 5, path)
 
 global_contagios_3d(data_dict, countries, path)
@@ -78,15 +79,17 @@ bot = telebot.TeleBot(str(token))
 [message, message_markdown] = obtain_message(data_dict, countries, path)
 print(message)
 
+
+
 if(stamp.time().hour > 8):
   bot.send_message(CHANNEL_ID, text=message_markdown, parse_mode = 'Markdown')
   if(stamp.time().hour == 22):
     figure_1 = open(path+'figures/death_last_10_threshold_30.png', 'rb')
     figure_1b = open(path+'figures/case_last_10_threshold_100.png', 'rb')
-    #figure_2 = open(path+'figures/deaths_daily_square.png', 'rb')
+    figure_2 = open(path+'figures/deaths_daily_square.png', 'rb')
     bot.send_photo(CHANNEL_ID, figure_1)
     bot.send_photo(CHANNEL_ID, figure_1b)
-    #bot.send_photo(CHANNEL_ID, figure_2)
+    bot.send_photo(CHANNEL_ID, figure_2)
   elif(stamp.time().hour == 12):
     print("")
     figure_3 = open(path+'figures/stacked_cases.png', 'rb')
