@@ -79,8 +79,6 @@ bot = telebot.TeleBot(str(token))
 [message, message_markdown] = obtain_message(data_dict, countries, path)
 print(message)
 
-
-
 if(stamp.time().hour > 8):
   bot.send_message(CHANNEL_ID, text=message_markdown, parse_mode = 'Markdown')
   if(stamp.time().hour == 22):

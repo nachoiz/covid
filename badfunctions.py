@@ -197,11 +197,11 @@ def req_data(number_of_countries):
         delta_cases = new_cases - last_cases
         delta_deaths = new_deaths - last_deaths
         
-        #data_dict[countries[i]]['_Cases'] = delta_cases
-        #data_dict[countries[i]]['_Deaths'] = delta_deaths
+        #data_dict[countries[i]]['Cases'][-1] = last_cases + delta_cases
+        #data_dict[countries[i]]['Deaths'][-1] = last_deaths + delta_deaths
         
-        data_dict[countries[i]]['Cases'][-1] = last_cases + delta_cases
-        data_dict[countries[i]]['Deaths'][-1] = last_deaths + delta_deaths
+        data_dict[countries[i]]['Cases'].append(last_cases + delta_cases)
+        data_dict[countries[i]]['Deaths'].append(last_deaths + delta_deaths)
                 
         try:
             data_dict[countries[i]]['Daily Cases'].append(delta_cases)
@@ -372,7 +372,8 @@ def plot_heat_map(data_dict, countries, path):
 
   for country in list_countries:
       vector = [(data_dict[country]['Deaths'][i+1]-data_dict[country]['Deaths'][i]) for i in range(0,len(data_dict[country]['Deaths'])-1)]
-      #print(vector[:-9])
+      print(data_dict[country]['Deaths'][-9:])
+      #print(vector[-9:])
       #vector.append(data_dict[country]['Daily Deaths'][-9:])
       mat[iRow,:] = vector[-9:]
       iRow = iRow+1
