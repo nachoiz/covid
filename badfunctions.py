@@ -72,7 +72,7 @@ def req_data(number_of_countries):
             countries[i] = 'US'
             init = 1
             fin = 6
-        elif countries[i] == 'UK' or countries[i] == 'Turkey' or countries[i] == 'Switzerland' or countries[i] == 'Netherlands':
+        elif countries[i] == 'UK' or countries[i] == 'Turkey' or countries[i] == 'Switzerland' or countries[i] == 'Netherlands' or countries[i] == 'Russia':
             init = 1
             fin = 6
 
